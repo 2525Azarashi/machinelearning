@@ -1,5 +1,6 @@
 import { h, $, $$, rich, tex, avatar, CAST, splitChars, reduced, onVisible, confetti, toast, store, tilt } from '../lib/ui.js'
 import { LABS } from '../labs/index.js'
+import { skeletonLab, openSheet, closeSheet } from '../lib/patterns.js'
 
 export function renderChapter(root, ch, all) {
   const cleanups = []
@@ -46,6 +47,24 @@ export function renderChapter(root, ch, all) {
 
   root.append(page)
 
+  // ───── スマホ用：目次 Bottom Sheet ─────
+  const fab = h('button.toc-fab', { type: 'button', 'aria-label': '目次を開く', 'aria-haspopup': 'dialog' },
+    h('span.toc-fab-ring', { html: '<svg viewBox="0 0 44 44" width="44" height="44"><circle cx="22" cy="22" r="19" fill="none" stroke="rgba(42,37,64,.15)" stroke-width="4"/><circle class="tf-arc" cx="22" cy="22" r="19" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" transform="rotate(-90 22 22)"/></svg>' }),
+    h('span.toc-fab-ic', '☰'), h('span.toc-fab-lb', '目次'))
+  fab.addEventListener('click', () => {
+    const list = h('ol.sheet-toc')
+    ch.sections.forEach((sec, i) => {
+      const done = seen.has(i), cur = links[i]?.classList.contains('on')
+      const nl = sec.blocks.filter(b => b.t === 'lab').length, nq = sec.blocks.filter(b => b.t === 'quiz' || b.t === 'exer').length
+      list.append(h('li' + (cur ? '.cur' : '') + (done ? '.done' : ''), h('button', { type: 'button', onclick: () => { closeSheet(); setTimeout(() => document.getElementById(sec.id).scrollIntoView({ behavior: 'smooth' }), 250) } },
+        h('span.st-no', done ? '✓' : String(i + 1).padStart(2, '0')),
+        h('span.st-t', sec.title),
+        h('span.st-meta', nl ? `🧪${nl}` : '', nq ? ` 📝${nq}` : ''))))
+    })
+    openSheet({ title: ch.title, eyebrow: `第${ch.no}回 · CONTENTS · ${Math.round(seen.size / secs.length * 100)}% 読了`, body: list, color: ch.color })
+  })
+  page.append(fab)
+
   // ───── animations ─────
   const chars = splitChars(title)
   if (!reduced && window.gsap) {
@@ -62,10 +81,18 @@ export function renderChapter(root, ch, all) {
   const secs = ch.sections.map(s => document.getElementById(s.id))
   const seen = new Set()
   const spy = () => {
+    if (document.documentElement.classList.contains('sheet-open') || document.documentElement.classList.contains('search-open')) return
     let cur = 0
-    secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * .4) { cur = i; seen.add(i) } })
+    secs.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * .4) cur = i })
+    // 「読んだ」は、そのセクションに 1.2 秒以上とどまったときだけ（ジャンプで一気に既読にならない）
+    clearTimeout(dwell); dwell = setTimeout(() => { if (!document.documentElement.classList.contains('sheet-open')) { seen.add(cur); paint() } }, 1200)
     links.forEach((a, i) => a.classList.toggle('on', i === cur))
+  }
+  let dwell
+  cleanups.push(() => clearTimeout(dwell))
+  const paint = () => {
     tocBar.style.width = (seen.size / secs.length) * 100 + '%'
+    const arc = page.querySelector('.tf-arc'); if (arc) arc.style.strokeDashoffset = 1 - seen.size / secs.length
     if (seen.size === secs.length) store.mark(ch.slug, 'read')
   }
   addEventListener('scroll', spy, { passive: true }); spy()
@@ -132,11 +159,19 @@ function lab(b, ch, cleanups, n) {
     body, foot)
   const fn = LABS[b.id]
   if (fn) {
-    // lazy init when near viewport
+    // Skeleton Screen → 画面に近づいたら Canvas を組み立ててフェードイン
+    const sk = skeletonLab()
+    body.append(sk)
     onVisible(el, () => {
-      try { const c = fn(body, { ch, color: b.color || ch.color, opts: b.opts || {} }); if (c) cleanups.push(c); $$('.lab-hint', body).forEach(x => { if (x.innerHTML.includes('$')) x.innerHTML = rich(x.innerHTML) }) }
-      catch (e) { console.error('lab error', b.id, e); body.append(h('p', 'ラボの読み込みに失敗しました')) }
-    }, { rootMargin: '300px 0px' })
+      setTimeout(() => {
+        sk.remove()
+        try {
+          const c = fn(body, { ch, color: b.color || ch.color, opts: b.opts || {} }); if (c) cleanups.push(c)
+          $$('.lab-hint', body).forEach(x => { if (x.innerHTML.includes('$')) x.innerHTML = rich(x.innerHTML) })
+          body.classList.add('lab-ready')
+        } catch (e) { console.error('lab error', b.id, e); body.append(h('p', 'ラボの読み込みに失敗しました')) }
+      }, reduced ? 0 : 380)
+    }, { rootMargin: '120px 0px' })
   } else body.append(h('p', `(lab ${b.id} not found)`))
   return el
 }

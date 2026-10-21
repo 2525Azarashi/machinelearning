@@ -24,11 +24,24 @@
 - 読了状況を localStorage に保存（目次の進捗バー・カードの「読了」）
 - `prefers-reduced-motion` 対応、レスポンシブ（390px〜）
 
+## UI パターン（学習導線に組み込み済み）
+| パターン | 場所 | 使い方 |
+|---|---|---|
+| Auto Complete | ヘッダー検索（`⌘K` / `Ctrl K` / `/`）、公式ノートの検索欄 | 用語・講義・セクション・ラボ・公式・演習を横断。ひらがな/英語でもヒット、↑↓/Enter/Tab補完、最近の検索 |
+| Bottom Sheet | 本文の太字用語をタップ → 用語解説／スマホの「目次」ボタン／公式カードのタップ | ドラッグで半分⇄全画面・下に払って閉じる、Esc・フォーカストラップ対応 |
+| Swipe Action | 公式ノートのカード | 右スワイプ＝★保存、左スワイプ＝✓覚えた（PCはクリック or `S`/`L`）。暗記率リングとフィルタタブ |
+| Toast | クイズ正誤・保存・ラボの到達 | アイコン・残り時間バー・「元に戻す」・ホバーで一時停止・スワイプで消去・最大3件 |
+| Skeleton Screen | ページ遷移時／各ラボの読み込み時 | 紙色シマー＋対話バブルの骨組み、ラボは3色ドット |
+| Pull to Refresh | スマホでページ最上部から下に引く | ホーム：「今日の1問」を入れ替え／章ページ：ラボをリセット |
+
+保存データ（単語帳・覚えた・最近の検索・読了）はすべて localStorage。用語集は `chapters/glossary.js`（約70語）。
+
 ## 章の追加方法
 1. `public/static/js/chapters/chN.js` を作る（既存章と同じ構造：`sections[].blocks[]`）
    - ブロック型：`talk` `formula` `lab` `point` `quiz` `exer` `compare` `flow` `kinetic` `html`
 2. 新しいラボが必要なら `public/static/js/labs/` に関数を追加し、`labs/index.js` に登録
 3. `chapters/index.js` の `CHAPTERS` に追加
+4. 新出用語を `chapters/glossary.js` に追加（本文の太字が自動で用語リンクになる）
 
 ## 技術構成
 - Hono（Cloudflare Pages）で SPA シェルを返し、フロントは素の ES Modules

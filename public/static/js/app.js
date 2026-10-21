@@ -3,12 +3,17 @@ import { CHAPTERS } from './chapters/index.js'
 import { renderHome } from './pages/home.js'
 import { renderChapter } from './pages/chapter.js'
 import { renderNotes } from './pages/notes.js'
+import { skeletonPage, pullToRefresh, toast, closeSheet } from './lib/patterns.js'
+import { initSearch } from './lib/search.js'
+import { linkTerms } from './lib/glossary-ui.js'
 
 const app = $('#app')
 let cleanup = []
 
 // ───────── header / footer ─────────
+let search
 function header() {
+  search = initSearch(CHAPTERS, (href) => go(href))
   const hd = $('#site-header')
   hd.innerHTML = ''
   const links = h('ul.nav-links#nav-links',
@@ -21,7 +26,7 @@ function header() {
   } }, h('span', { html: '<svg width="20" height="14" viewBox="0 0 20 14"><path d="M1 1h18M1 7h18M1 13h18" stroke="#2A2540" stroke-width="2.6" stroke-linecap="round"/></svg>' }))
   hd.append(h('nav.wrap.nav', { 'aria-label': 'メインナビゲーション' },
     h('a.brand', { href: '/', 'data-link': '' }, h('span', { html: mascot() }), h('span', 'まるっと機械学習', h('small', 'MARUTTO · ML I'))),
-    links, burger))
+    h('div.nav-right', search.trigger, burger), links))
 }
 function footer() {
   $('#site-footer').innerHTML = ''
@@ -44,6 +49,7 @@ function route(path) {
   } else if (path.startsWith('/notes')) { cleanup.push(renderNotes(app, CHAPTERS)); title = '公式ノート — まるっと機械学習' }
   else cleanup.push(renderHome(app, CHAPTERS))
   document.title = title
+  linkTerms(app, CHAPTERS, (href) => go(href))
   $$('.nav-links a').forEach(a => a.classList.toggle('active', a.getAttribute('href') === path && !a.dataset.hash))
   $('#nav-links')?.classList.remove('open')
   bindHover()
@@ -52,20 +58,26 @@ function route(path) {
 const wipe = $('#wipe')
 async function go(href, push = true) {
   const url = new URL(href, location.origin)
-  const same = url.pathname === location.pathname
-  if (push) history.pushState({}, '', url.pathname + url.hash)
+  const same = url.pathname === location.pathname && url.search === location.search
+  if (push) history.pushState({}, '', url.pathname + url.search + url.hash)
+  closeSheet(true)
   if (same && url.hash) { document.getElementById(url.hash.slice(1))?.scrollIntoView({ behavior: 'smooth' }); return }
-  if (!reduced && window.gsap) {
-    await gsap.to($$('i', wipe), { scaleX: 1, transformOrigin: 'left', duration: .42, stagger: .06, ease: 'power3.inOut' })
-  }
-  route(url.pathname)
+  const anim = !reduced && window.gsap
+  if (anim) await gsap.to($$('i', wipe), { scaleX: 1, transformOrigin: 'left', duration: .38, stagger: .05, ease: 'power3.inOut' })
+  // Skeleton Screen: 重い章ページ（KaTeX + Canvas）を組み立てる間の骨組み
+  cleanup.forEach(f => { try { f() } catch {} }); cleanup = []
+  app.innerHTML = ''
+  app.append(skeletonPage(url.pathname === '/' ? 'home' : 'chapter'))
   window.scrollTo(0, 0)
-  if (url.hash) setTimeout(() => document.getElementById(url.hash.slice(1))?.scrollIntoView({ behavior: 'smooth' }), 300)
-  if (!reduced && window.gsap) {
-    gsap.to($$('i', wipe), { scaleX: 0, transformOrigin: 'right', duration: .5, stagger: .06, ease: 'power3.inOut' })
-  }
+  if (anim) gsap.to($$('i', wipe), { scaleX: 0, transformOrigin: 'right', duration: .45, stagger: .05, ease: 'power3.inOut' })
+  await new Promise(r => setTimeout(r, anim ? 420 : 0))
+  await new Promise(r => requestAnimationFrame(() => r()))
+  route(url.pathname)
+  if (anim) gsap.fromTo(app, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: .45, ease: 'power3.out', clearProps: 'all' })
+  if (url.hash) setTimeout(() => document.getElementById(url.hash.slice(1))?.scrollIntoView({ behavior: 'smooth' }), 350)
   app.focus({ preventScroll: true })
 }
+window.__go = go
 
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[data-link]')
@@ -124,3 +136,10 @@ route(location.pathname)
 if (location.hash) setTimeout(() => document.getElementById(location.hash.slice(1))?.scrollIntoView(), 600)
 if (document.fonts?.ready) document.fonts.ready.then(loader); else loader()
 setTimeout(() => { if (!$('#loader').classList.contains('done')) { $('#loader').classList.add('done'); document.dispatchEvent(new Event('loader:done')) } }, 4000)
+
+// ───────── Pull to Refresh（タッチ端末のみ） ─────────
+pullToRefresh(async () => {
+  if (location.pathname === '/') { document.dispatchEvent(new Event('ptr:refresh')); document.getElementById('daily')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+  else { route(location.pathname); window.scrollTo(0, 0) }
+  toast(location.pathname === '/' ? '「今日の1問」を入れ替えました' : 'ラボをリセットしました', { kind: 'info', icon: '↻' })
+})

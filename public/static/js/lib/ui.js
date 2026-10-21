@@ -142,14 +142,8 @@ export function countUp(el, to, { dur = 1.2, dec = 0, suffix = '' } = {}) {
   gsap.to(o, { v: to, duration: dur, ease: 'power3.out', onUpdate: () => (el.textContent = o.v.toFixed(dec) + suffix) })
 }
 
-export function toast(msg, kind = 'ok') {
-  let box = $('#toasts')
-  if (!box) { box = h('div#toasts', { 'aria-live': 'polite' }); document.body.append(box) }
-  const t = h('div.toast.' + kind, { html: msg })
-  box.append(t)
-  requestAnimationFrame(() => t.classList.add('in'))
-  setTimeout(() => { t.classList.remove('in'); setTimeout(() => t.remove(), 500) }, 2600)
-}
+// toast は patterns.js の高機能版を使う（循環参照を避けるため遅延呼び出し）
+export function toast(msg, opt) { return import('./patterns.js').then(m => m.toast(msg, opt)) }
 
 // confetti burst (for correct answers)
 export function confetti(x, y, n = 26) {

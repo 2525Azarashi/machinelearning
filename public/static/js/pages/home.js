@@ -1,6 +1,8 @@
 import { h, $, $$, avatar, mascot, splitChars, reduced, onVisible, countUp, tilt, store } from '../lib/ui.js'
 import { talk } from './chapter.js'
 import { mulberry, randn, polyfit, polyval } from '../lib/plot.js'
+import { rich } from '../lib/ui.js'
+import { toast } from '../lib/patterns.js'
 
 const ICONS = {
   curve: (c) => `<svg viewBox="0 0 200 120"><path d="M10 60 C 40 0, 70 0, 100 60 S 160 120, 190 60" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" class="draw" pathLength="1"/>${[[20, 44], [52, 18], [84, 34], [116, 82], [148, 100], [180, 70]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="7" fill="#fff" stroke="#2A2540" stroke-width="3" class="pop" style="--d:${i * .06}s"/>`).join('')}</svg>`,
@@ -51,6 +53,42 @@ export function renderHome(root, chapters) {
   const kws = $$('.w', kin)
   const onK = () => { const r = kin.getBoundingClientRect(); const p = Math.max(0, Math.min(1, (innerHeight * .85 - r.top) / (innerHeight * .55))); kws.forEach((w, i) => w.classList.toggle('on', i < Math.round(p * kws.length))) }
   addEventListener('scroll', onK, { passive: true }); cleanups.push(() => removeEventListener('scroll', onK)); setTimeout(onK, 60)
+
+  // ═════ 今日の1問（Pull to Refresh / シャッフルで入れ替え） ═════
+  const quizzes = chapters.flatMap(c => c.sections.flatMap(sec => sec.blocks.filter(b => b.t === 'quiz').map(b => ({ ...b, ch: c, sec }))))
+  let qi = Math.floor(Math.random() * quizzes.length)
+  const qBox = h('div.daily-q')
+  const renderQ = (dir = 1) => {
+    const qz = quizzes[qi]
+    const card = h('div.dq-card', { style: { '--c': qz.ch.color } },
+      h('div.dq-top', h('span.chip', `第${qz.ch.no}回 · ${qz.sec.title}`), h('span.dq-count', `${qi + 1} / ${quizzes.length}`)),
+      h('div.dq-q', { html: rich(qz.q) }),
+      h('div.dq-opts', qz.options.map((o, i) => {
+        const b = h('button.dq-opt', { type: 'button', html: rich(o) })
+        b.addEventListener('click', (e) => {
+          const ok = i === qz.answer
+          b.classList.add(ok ? 'right' : 'wrong')
+          if (ok) { $$('.dq-opt', card).forEach(x => (x.disabled = true)); ex.classList.add('show'); import('../lib/ui.js').then(m => m.confetti(e.clientX, e.clientY)); toast('せいかい！ 🎉', { kind: 'ok' }) }
+          else { b.disabled = true; toast('おしい… もう一回！', { kind: 'ng' }) }
+        })
+        return b
+      })),
+      h('div.dq-ex', { html: rich(qz.explain) }))
+    const ex = card.querySelector('.dq-ex')
+    const old = qBox.firstChild
+    if (old && !reduced && window.gsap) {
+      gsap.to(old, { x: -60 * dir, opacity: 0, rotate: -3 * dir, duration: .3, ease: 'power2.in', onComplete: () => old.remove() })
+      qBox.append(card); gsap.from(card, { x: 80 * dir, opacity: 0, rotate: 4 * dir, duration: .55, delay: .15, ease: 'back.out(1.6)' })
+    } else { qBox.innerHTML = ''; qBox.append(card) }
+  }
+  const shuffle = () => { let n; do { n = Math.floor(Math.random() * quizzes.length) } while (n === qi && quizzes.length > 1); qi = n; renderQ(1) }
+  renderQ()
+  root.append(h('section.section.wrap#daily', { style: { paddingTop: '40px', paddingBottom: '20px' } },
+    h('div.sec-head.reveal', h('div', h('div.eyebrow', 'Daily'), h('h2', '今日の1問')),
+      h('div.dq-actions', h('p', { html: 'スマホは<b>画面を下に引っぱる</b>と問題が入れ替わります。' }), h('button.btn.sm.ghost', { type: 'button', onclick: shuffle }, '🔀 別の問題'))),
+    h('div.reveal', qBox)))
+  const onPtr = () => shuffle()
+  document.addEventListener('ptr:refresh', onPtr); cleanups.push(() => document.removeEventListener('ptr:refresh', onPtr))
 
   // ═════ HOW ═════
   const pipe = h('section.section.wrap#how',
