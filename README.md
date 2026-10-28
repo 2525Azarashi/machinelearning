@@ -44,9 +44,17 @@
 4. 新出用語を `chapters/glossary.js` に追加（本文の太字が自動で用語リンクになる）
 
 ## 技術構成
-- Hono（Cloudflare Pages）で SPA シェルを返し、フロントは素の ES Modules
+- **完全な静的サイト**：`public/` がそのまま公開ディレクトリ（`public/index.html` が SPA シェルの唯一の正本）
+- フロントは素の ES Modules（ビルド不要）
+- Vercel：`vercel.json` で `outputDirectory: public`・ビルド無し・`/static/*` 以外を `index.html` に rewrite（`/chapter/1` などの直リンク・リロード対応）
+- Cloudflare Pages / ローカル：Hono（`src/index.tsx`）が同じ `public/index.html` を返す
 - CDN：GSAP + ScrollTrigger、KaTeX、Google Fonts（Zen Maru Gothic / Fredoka / Yomogi / DM Mono）
 - データ保存なし（進捗のみ localStorage）
+
+## デプロイ（Vercel）
+1. Vercel で GitHub リポジトリ `2525Azarashi/machinelearning` を Import
+2. Root Directory はリポジトリ直下（空のまま）。Framework Preset / Build 設定は `vercel.json` が上書きするので変更不要
+3. Deploy → `main` への push で自動デプロイ
 
 ## 開発
 ```bash
@@ -57,6 +65,6 @@ pm2 start ecosystem.config.cjs   # http://localhost:3000
 ## 未実装 / 次のステップ
 - 第7回以降の講義プリントの反映
 - 章末の総合ミニテスト、用語集ページ
-- デプロイ（Cloudflare Pages）
+- 独自ドメイン設定
 
 講義資料 © OkadomeLab。本サイトは学習用の非公式ノートです。

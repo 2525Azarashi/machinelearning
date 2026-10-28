@@ -1,0 +1,9 @@
+src
+dist
+.wrangler
+node_modules
+ecosystem.config.cjs
+wrangler.jsonc
+vite.config.ts
+tsconfig.json
+pnpm-workspace.yaml
