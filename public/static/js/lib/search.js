@@ -29,7 +29,7 @@ function build(chapters) {
   return idx
 }
 const TYPE = { term: ['用語', '📖'], chapter: ['講義', '📚'], section: ['セクション', '📍'], lab: ['ラボ', '🧪'], exer: ['演習', '📝'], formula: ['公式', '∑'] }
-const SUGGEST = ['過学習', 'ベイズの定理', '最尤推定', 'ガウス分布', '正則化', 'ROC曲線']
+const SUGGEST = ['過学習', 'ベイズの定理', '最尤推定', 'ロジスティック回帰', '誤差逆伝播法', 'CNN']
 
 export function initSearch(chapters, go) {
   INDEX = build(chapters)

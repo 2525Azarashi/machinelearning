@@ -5,5 +5,13 @@ import ch3 from './ch3.js'
 import ch4 from './ch4.js'
 import ch5 from './ch5.js'
 import ch6 from './ch6.js'
+import ch7 from './ch7.js'
+import ch8 from './ch8.js'
+import ch9 from './ch9.js'
+import ch10 from './ch10.js'
+import ch11 from './ch11.js'
+import ch12 from './ch12.js'
+import ch13 from './ch13.js'
+import ch14 from './ch14.js'
 
-export const CHAPTERS = [ch1, ch2, ch3, ch4, ch5, ch6]
+export const CHAPTERS = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8, ch9, ch10, ch11, ch12, ch13, ch14]
