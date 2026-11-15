@@ -25,14 +25,14 @@ function header() {
     const o = links.classList.toggle('open'); burger.setAttribute('aria-expanded', o)
   } }, h('span', { html: '<svg width="20" height="14" viewBox="0 0 20 14"><path d="M1 1h18M1 7h18M1 13h18" stroke="#2A2540" stroke-width="2.6" stroke-linecap="round"/></svg>' }))
   hd.append(h('nav.wrap.nav', { 'aria-label': 'メインナビゲーション' },
-    h('a.brand', { href: '/', 'data-link': '' }, h('span', { html: mascot() }), h('span', 'まるっと機械学習', h('small', 'MARUTTO · ML I'))),
+    h('a.brand', { href: '/', 'data-link': '' }, h('span', { html: mascot() }), h('span', 'まるっと機械学習', h('small', 'MARUTTO · ML I & II'))),
     h('div.nav-right', search.trigger, burger), links))
 }
 function footer() {
   $('#site-footer').innerHTML = ''
   $('#site-footer').append(h('div.wrap.foot',
     h('div', h('div.foot-big', { html: 'Learn by<br><span>touching.</span>' })),
-    h('div', h('small', '機械学習 I — Part I 基礎'), h('small', '講義プリントが届くたびに章が増えていきます。'), h('small', '講義資料 © OkadomeLab / このサイトは学習用の非公式ノートです。'))))
+    h('div', h('small', '機械学習 — Part I 基礎 ＆ Part II モデル編（全14回）'), h('small', '講義プリントが届くたびに章が増えていきます。'), h('small', '講義資料 © OkadomeLab / このサイトは学習用の非公式ノートです。'))))
 }
 
 // ───────── router ─────────

@@ -11,6 +11,9 @@ const ICONS = {
   valley: (c) => `<svg viewBox="0 0 200 120"><path d="M10 10 Q 100 200 190 10" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" class="draw" pathLength="1"/><circle cx="100" cy="99" r="11" fill="#FF8E6E" stroke="#2A2540" stroke-width="3" class="roll"/></svg>`,
   split: (c) => `<svg viewBox="0 0 200 120"><path d="M10 110 C 40 110, 50 20, 75 20 S 110 110, 140 110" stroke="#FF8E6E" stroke-width="5" fill="none" class="draw" pathLength="1"/><path d="M60 110 C 90 110, 100 30, 125 30 S 160 110, 190 110" stroke="${c}" stroke-width="5" fill="none" class="draw" pathLength="1"/><path d="M100 0 V 120" stroke="#2A2540" stroke-width="4" class="slide"/></svg>`,
   roc: (c) => `<svg viewBox="0 0 200 120"><rect x="40" y="6" width="120" height="108" rx="8" fill="#fff" stroke="#2A2540" stroke-width="3"/><path d="M40 114 L160 6" stroke="#8E88A6" stroke-width="2" stroke-dasharray="5 5"/><path d="M40 114 C 46 40, 80 14, 160 6" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round" class="draw" pathLength="1"/></svg>`,
+  grid: (c) => `<svg viewBox="0 0 200 120"><g transform="translate(26,14)"><path d="M12 0 H2 V92 H12 M136 0 H146 V92 H136" stroke="#2A2540" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>${[0, 1, 2].flatMap(r => [0, 1, 2].map(col => `<rect x="${20 + col * 38}" y="${8 + r * 28}" width="30" height="20" rx="5" fill="${r === col ? c : '#fff'}" stroke="#2A2540" stroke-width="2.5" class="pop" style="--d:${(r * 3 + col) * .04}s"/>`)).join('')}</g></svg>`,
+  net: (c) => `<svg viewBox="0 0 200 120">${[[36, 26], [36, 60], [36, 94]].flatMap(([x1, y1]) => [[100, 20], [100, 50], [100, 80], [100, 104]].map(([x2, y2]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#2A2540" stroke-opacity=".28" stroke-width="2"/>`)).join('')}${[[100, 20], [100, 50], [100, 80], [100, 104]].flatMap(([x1, y1]) => [[164, 40], [164, 82]].map(([x2, y2]) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="2.6"/>`)).join('')}${[[36, 26, '#fff'], [36, 60, '#fff'], [36, 94, '#fff'], [100, 20, c], [100, 50, '#FFD66B'], [100, 80, c], [100, 104, '#FFD66B'], [164, 40, '#6FD6B8'], [164, 82, '#FF8E6E']].map(([x, y, f], i) => `<circle cx="${x}" cy="${y}" r="9" fill="${f}" stroke="#2A2540" stroke-width="2.8" class="pop" style="--d:${i * .05}s"/>`).join('')}</svg>`,
+  cnn: (c) => `<svg viewBox="0 0 200 120"><rect x="18" y="16" width="68" height="68" rx="8" fill="#fff" stroke="#2A2540" stroke-width="3"/><rect x="30" y="28" width="32" height="32" rx="5" fill="${c}" fill-opacity=".45" stroke="#2A2540" stroke-width="2.6"/><path d="M62 34 L106 44 M62 56 L106 62" stroke="#2A2540" stroke-width="2.2" stroke-dasharray="4 3"/><rect x="106" y="28" width="46" height="46" rx="7" fill="${c}" stroke="#2A2540" stroke-width="3"/><rect x="148" y="54" width="34" height="34" rx="6" fill="#FFD66B" stroke="#2A2540" stroke-width="3"/></svg>`,
 }
 
 export function renderHome(root, chapters) {
@@ -23,14 +26,14 @@ export function renderHome(root, chapters) {
   const t3 = h('span.row.en-row', h('span.split.en', 'Machine Learning'))
   const lblM = h('div.stage-label', { style: { left: '-4%', bottom: '20%' } }, 'M = 0')
   const lblE = h('div.stage-label', { style: { right: '0%', top: '6%', background: '#FFF0B8' } }, '単純すぎ 🙃')
-  const badge = h('div.hero-badge', { html: `<svg viewBox="0 0 120 120"><g class="spin"><path id="circ" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0" fill="none"/><text><textPath href="#circ">MACHINE LEARNING I · PART I · </textPath></text></g><circle cx="60" cy="60" r="26" fill="#FFD66B" stroke="#2A2540" stroke-width="3"/><text x="60" y="67" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="20" fill="#2A2540">ML</text></svg>` })
+  const badge = h('div.hero-badge', { html: `<svg viewBox="0 0 120 120"><g class="spin"><path id="circ" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0" fill="none"/><text><textPath href="#circ">MACHINE LEARNING · PART I & II · </textPath></text></g><circle cx="60" cy="60" r="26" fill="#FFD66B" stroke="#2A2540" stroke-width="3"/><text x="60" y="67" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="20" fill="#2A2540">ML</text></svg>` })
   const stage = h('div.hero-stage', h('div.ring'), h('canvas#hero-canvas', { role: 'img', 'aria-label': 'データ点に多項式曲線がフィットし、次数を上げると過学習するアニメーション' }), lblM, lblE, badge)
   stage.insertAdjacentHTML('beforeend', mascot('hero-mascot'))
 
   const hero = h('section.hero#hero-section',
     h('div.wrap.hero-grid',
       h('div',
-        h('span.chip.hero-chip', '🧠 機械学習 I ・ Part I 基礎'),
+        h('span.chip.hero-chip', '🧠 機械学習 ・ Part I 基礎 ＆ Part II モデル編'),
         h('h1.hero-title', t1, t2, t3),
         h('p.hero-lead', { html: '数式を読む前に、<b>動かして</b>つかむ。<br><b>サカイ</b>先輩と<b>リョウガ</b>くんのおしゃべりを聞きながら、点を動かし、曲線を曲げ、確率をふくらませる——機械学習の、ちいさな実験室です。' }),
         h('div.hero-cta',
@@ -40,7 +43,7 @@ export function renderHome(root, chapters) {
     h('div.scroll-cue', h('i'), 'SCROLL'))
   root.append(hero)
 
-  const words = ['分類', '回帰', '最小2乗法', '過学習', '正則化', 'ベイズの定理', 'ガウス分布', '最尤推定', 'MAP推定', '期待損失', '決定理論', 'ROC-AUC']
+  const words = ['分類', '回帰', '最小2乗法', '過学習', 'ベイズの定理', '最尤推定', '行列微分', '基底関数', 'エビデンス近似', 'ロジスティック回帰', '誤差逆伝播法', 'CNN']
   const mq = (alt) => h('div.marquee' + (alt ? '.alt' : ''), { 'aria-hidden': 'true' }, h('div.marquee-track', [...words, ...words].map(w => h('span', w))))
   root.append(mq(false), mq(true))
 
@@ -101,7 +104,7 @@ export function renderHome(root, chapters) {
 
   const count = (pred) => chapters.reduce((s, c) => s + c.sections.reduce((a, sec) => a + sec.blocks.reduce((q, b) => q + pred(b), 0), 0), 0)
   const nLabs = count(b => b.t === 'lab' ? 1 : 0), nQuiz = count(b => (b.t === 'quiz' || b.t === 'exer') ? 1 : 0), nTalk = count(b => b.t === 'talk' ? b.lines.length : 0)
-  const statsData = [[chapters.length, '公開中の回', '#FF8E6E', chapters.length / 14], [nLabs, 'さわれるラボ', '#6FD6B8', nLabs / 30], [nTalk, '対話のセリフ', '#B9A7FF', 1], [nQuiz, 'クイズ・演習', '#FFD66B', nQuiz / 40]]
+  const statsData = [[chapters.length, '公開中の回', '#FF8E6E', 1], [nLabs, 'さわれるラボ', '#6FD6B8', 1], [nTalk, '対話のセリフ', '#B9A7FF', 1], [nQuiz, 'クイズ・演習', '#FFD66B', 1]]
   const stats = h('div.stats', statsData.map(([n, l, c, p]) => { const el = h('div.stat.reveal', h('div.n', '0'), h('div.l', l), h('div.bar', h('i', { style: { background: c } }))); el.dataset.n = n; el.dataset.p = Math.min(1, p); return el }))
   pipe.append(stats)
   $$('.stat', stats).forEach(el => onVisible(el, () => { countUp($('.n', el), +el.dataset.n, { dur: 1.4 }); setTimeout(() => ($('.bar i', el).style.width = el.dataset.p * 100 + '%'), 100) }))
@@ -133,9 +136,9 @@ export function renderHome(root, chapters) {
     tilt(card, 7)
     grid.append(card)
   })
-  const soon = h('div.ch-card.soon.reveal'); soon.insertAdjacentHTML('beforeend', mascot()); soon.append(h('h3', '第7回〜'), h('p', { style: { flex: 0 } }, '講義プリントが届いたら、ここに新しい回が増えます。'))
+  const soon = h('div.ch-card.soon.reveal'); soon.insertAdjacentHTML('beforeend', mascot()); soon.append(h('h3', '第15回〜'), h('p', { style: { flex: 0 } }, 'さらに新しい講義プリントが届いたら、ここに回が増えていきます。'))
   grid.append(soon)
-  root.append(h('section.section.wrap#chapters', h('div.sec-head.reveal', h('div', h('div.eyebrow', 'Chapters'), h('h2', '講義一覧')), h('p', 'Part I 基礎。どこからでも読めるけど、順番に進むとストーリーがつながります。')), grid))
+  root.append(h('section.section.wrap#chapters', h('div.sec-head.reveal', h('div', h('div.eyebrow', 'Chapters'), h('h2', '講義一覧')), h('p', 'Part I 基礎（第1〜6回）＋ Part II パラメトリックモデル・ニューラルネット（第7〜14回）。どこからでも読めるけど、順番に進むとストーリーがつながります。')), grid))
 
   // ═════ animations ═════
   const chars = $$('.split', hero).flatMap(el => splitChars(el))
